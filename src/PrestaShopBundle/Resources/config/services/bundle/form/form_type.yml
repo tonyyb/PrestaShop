@@ -81,6 +81,7 @@ services:
             - "@prestashop.adapter.data_provider.product"
             - "@prestashop.adapter.data_provider.feature"
             - "@prestashop.adapter.data_provider.manufacturer"
+            - "@prestashop.hook.dispatcher"
         parent: 'form.type.common_type'
         public: true
         tags:

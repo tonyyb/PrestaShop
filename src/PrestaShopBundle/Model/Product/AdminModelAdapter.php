@@ -37,7 +37,9 @@ use PrestaShop\PrestaShop\Adapter\Warehouse\WarehouseDataProvider;
 use PrestaShop\PrestaShop\Adapter\Feature\FeatureDataProvider;
 use PrestaShop\PrestaShop\Adapter\Pack\PackDataProvider;
 use PrestaShop\PrestaShop\Adapter\Shop\Context as ShopContext;
+use PrestaShop\PrestaShop\Core\Hook\HookDispatcher;
 use PrestaShop\PrestaShop\Core\Product\ProductInterface;
+use PrestaShopBundle\Service\Hook\HookEvent;
 use PrestaShopBundle\Utils\FloatParser;
 use ProductDownload;
 use Attachment;
@@ -78,6 +80,8 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
     private $shopContext;
     /** @var TaxRuleDataProvider */
     private $taxRuleDataProvider;
+    /** @var HookDispatcher */
+    private $hookDispatcher;
     /** @var array */
     private $productPricePriority;
     /** @var WarehouseDataProvider */
@@ -180,6 +184,7 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
      * @param PackDataProvider $packDataProvider
      * @param ShopContext $shopContext
      * @param TaxRuleDataProvider $taxRuleDataProvider
+     * @param HookDispatcher $hookDispatcher
      *
      * @throws \PrestaShopException
      */
@@ -193,7 +198,8 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
         FeatureDataProvider $featureDataProvider,
         PackDataProvider $packDataProvider,
         ShopContext $shopContext,
-        TaxRuleDataProvider $taxRuleDataProvider
+        TaxRuleDataProvider $taxRuleDataProvider,
+        HookDispatcher $hookDispatcher
     ) {
         $this->context = $legacyContext;
         $this->contextShop = $this->context->getContext();
@@ -210,6 +216,7 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
         $this->configuration = new Configuration();
         $this->shopContext = $shopContext;
         $this->taxRuleDataProvider = $taxRuleDataProvider;
+        $this->hookDispatcher = $hookDispatcher;
     }
 
     /**
@@ -427,6 +434,11 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
             }
         }
 
+        $this->hookDispatcher->dispatch(
+            'actionGetFormProductModelData',
+            (new HookEvent())->setHookParameters(['newFormData' => & $new_form_data, 'oldFormData' => $form_data])
+        );
+
         return $new_form_data;
     }
 
@@ -458,6 +470,12 @@ class AdminModelAdapter extends \PrestaShopBundle\Model\AdminModelAdapter
         $this->formData['step4'] = array_merge(
             $this->formData['step4'],
             $this->getDataWarehousesCombinations($product)
+        );
+
+        // Additional custom data
+        $this->hookDispatcher->dispatch(
+            'actionGetFormProductData',
+            (new HookEvent())->setHookParameters(['formData' => & $this->formData, 'product' => $product])
         );
 
         return $this->formData;

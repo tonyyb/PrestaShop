@@ -26,6 +26,7 @@
 
 namespace PrestaShopBundle\Form\Admin\Product;
 
+use PrestaShop\PrestaShop\Core\Hook\HookDispatcher;
 use PrestaShopBundle\Form\Admin\Category\SimpleCategory;
 use PrestaShopBundle\Form\Admin\Type\ChoiceCategoriesTreeType;
 use PrestaShopBundle\Form\Admin\Type\CommonAbstractType;
@@ -69,6 +70,7 @@ class ProductInformation extends CommonAbstractType
      * @param object $productDataProvider
      * @param object $featureDataProvider
      * @param object $manufacturerDataProvider
+     * @param object $hookDispatcher
      */
     public function __construct(
         $translator,
@@ -77,7 +79,8 @@ class ProductInformation extends CommonAbstractType
         $categoryDataProvider,
         $productDataProvider,
         $featureDataProvider,
-        $manufacturerDataProvider
+        $manufacturerDataProvider,
+        $hookDispatcher
     ) {
         $this->context = $legacyContext;
         $this->translator = $translator;
@@ -87,6 +90,7 @@ class ProductInformation extends CommonAbstractType
         $this->categoryDataProvider = $categoryDataProvider;
         $this->manufacturerDataProvider = $manufacturerDataProvider;
         $this->featureDataProvider = $featureDataProvider;
+        $this->hookDispatcher = $hookDispatcher;
 
         $this->configuration = new Configuration();
         $this->locales = $this->context->getLanguages();
@@ -309,6 +313,12 @@ class ProductInformation extends CommonAbstractType
                 }
             }
         });
+
+        /* @var $hookDispatcher HookDispatcher */
+        $this->hookDispatcher->dispatch(
+            'actionBuildFormProductInformation',
+            (new HookEvent())->setHookParameters(['formBuilder' => $builder, 'translator' => $this->translator, 'context' => $this->context])
+        );
     }
 
     /**

@@ -90,10 +90,23 @@
 
             </div>
 
+            {% set hooks = renderhooksarray('displayAdminProductsMainStepLeftColumnTabs', { 'id_product': id_product }) %}
+
             <div class="summary-description-container">
               <ul class="nav nav-tabs bordered">
                 <li id="tab_description_short" class="nav-item"><a href="#description_short" data-toggle="tab" class="nav-link description-tab active">{{ 'Summary'|trans({}, 'Admin.Catalog.Feature') }}</a></li>
                 <li id="tab_description" class="nav-item"><a href="#description" data-toggle="tab" class="nav-link description-tab">{{ 'Description'|trans({}, 'Admin.Global') }}</a></li>
+                {% for module in hooks %}
+                    {% if module.content and module.content.tabs %}
+                        {% for tab in module.content.tabs %}
+                          <li class="nav-item">
+                            <a href="#additional_tab_{{ tab.id }}" data-toggle="tab" class="nav-link description-tab">
+                                {{ tab.label }}
+                            </a>
+                          </li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
               </ul>
 
               <div class="tab-content bordered">
@@ -103,6 +116,16 @@
                 <div class="tab-pane panel panel-default " id="description">
                   {{ form_widget(formDescription) }}
                 </div>
+                {% for module in hooks %}
+                    {% if module.content and module.content.tabs %}
+                        {% for tab in module.content.tabs %}
+                            {% set field = form.step1[tab.fieldName] %}
+                          <div class="tab-pane panel panel-default " id="additional_tab_{{ tab.id }}">
+                              {{ form_widget(field) }}
+                          </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
               </div>
             </div>
 
